@@ -1,0 +1,22 @@
+@page "{id:int}"
+@model ExpenseTracker.Pages.DeleteModel
+@{
+    ViewData["Title"] = "Delete expense";
+}
+
+<div class="toolbar">
+    <h1>Delete expense</h1>
+</div>
+
+<div class="form-card">
+    <p class="confirm-line">@Model.Expense.Description &middot; @Model.Expense.Date.ToString("MMM d, yyyy") &middot; @Model.Expense.Category</p>
+    <p class="confirm-amount">@Model.Expense.Amount.ToString("C")</p>
+
+    <form method="post">
+        <input type="hidden" asp-for="Expense.Id" />
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Delete permanently</button>
+            <a asp-page="/Index">Cancel</a>
+        </div>
+    </form>
+</div>

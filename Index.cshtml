@@ -1,0 +1,120 @@
+@page
+@model ExpenseTracker.Pages.IndexModel
+@{
+    ViewData["Title"] = "Expenses";
+    var prevDate = new DateTime(Model.Year!.Value, Model.Month!.Value, 1).AddMonths(-1);
+    var nextDate = new DateTime(Model.Year!.Value, Model.Month!.Value, 1).AddMonths(1);
+}
+
+<div class="layout-grid">
+    <aside class="summary-rail">
+        <div class="summary-card">
+            <p class="summary-label">Spent in @Model.PeriodLabel</p>
+            <p class="summary-figure">@Model.Total.ToString("C")</p>
+            <p class="summary-sub">
+                <a asp-page="/Index" asp-route-year="@prevDate.Year" asp-route-month="@prevDate.Month">&larr; @prevDate.ToString("MMM")</a>
+                &nbsp;&middot;&nbsp;
+                <a asp-page="/Index" asp-route-year="@nextDate.Year" asp-route-month="@nextDate.Month">@nextDate.ToString("MMM") &rarr;</a>
+            </p>
+        </div>
+
+        @if (Model.Breakdown.Count > 0)
+        {
+            <div class="summary-card">
+                <p class="summary-label">By category</p>
+                @foreach (var slice in Model.Breakdown)
+                {
+                    var color = Categories.ColorFor(slice.Category);
+                    <div class="breakdown-row">
+                        <span class="dot" style="background: @color"></span>
+                        <span>
+                            <span class="breakdown-name">@slice.Category</span>
+                            <span class="breakdown-track"><span class="breakdown-fill" style="width: @(slice.RelativeWidth.ToString("0.#"))%; background: @color"></span></span>
+                        </span>
+                        <span class="breakdown-amount">@slice.Amount.ToString("C0")</span>
+                    </div>
+                }
+            </div>
+        }
+    </aside>
+
+    <section>
+        <div class="toolbar">
+            <h1>@Model.PeriodLabel</h1>
+            <form class="filter-form" method="get">
+                <input type="hidden" name="year" value="@Model.Year" />
+                <input type="hidden" name="month" value="@Model.Month" />
+                <select name="categoryFilter" onchange="this.form.submit()">
+                    <option value="">All categories</option>
+                    @foreach (var c in Categories.All)
+                    {
+                        if (c == Model.CategoryFilter)
+                        {
+                            <option value="@c" selected>@c</option>
+                        }
+                        else
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    }
+                </select>
+                <a class="btn btn-primary" asp-page="/Create">+ Add expense</a>
+            </form>
+        </div>
+
+        @if (Model.Expenses.Count == 0)
+        {
+            <div class="empty-state">
+                <h2>Nothing recorded here yet</h2>
+                <p>Add the first expense for @Model.PeriodLabel to start the ledger.</p>
+            </div>
+        }
+        else
+        {
+            <table class="ledger">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th class="num">Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model.Expenses)
+                    {
+                        <tr>
+                            <td class="date-cell">@e.Date.ToString("MMM d")</td>
+                            <td class="desc-cell">
+                                @e.Description
+                                @if (!string.IsNullOrWhiteSpace(e.Notes))
+                                {
+                                    <span class="notes">@e.Notes</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="cat-cell">
+                                    <span class="dot" style="background: @Categories.ColorFor(e.Category)"></span>
+                                    @e.Category
+                                </span>
+                            </td>
+                            <td class="num">@e.Amount.ToString("C")</td>
+                            <td class="row-actions">
+                                <a asp-page="/Edit" asp-route-id="@e.Id">Edit</a>
+                                <a asp-page="/Delete" asp-route-id="@e.Id">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">Total</td>
+                        <td class="num">@Model.Total.ToString("C")</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        }
+    </section>
+</div>
